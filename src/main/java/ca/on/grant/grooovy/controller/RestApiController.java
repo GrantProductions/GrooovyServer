@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,8 @@ import ca.on.grant.grooovy.util.JWTUtil;
 public class RestApiController {
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private MessageSource messageSource;
 	@Autowired
 	private JWTUtil jwtUtil;
 	private static final Logger LOG = LoggerFactory.getLogger(RestApiController.class);
@@ -54,12 +57,20 @@ public class RestApiController {
 		final ResponseEntity<RegistrationResponse> response;
 		final RegistrationResult result = userService.registerUser(username, email, password, confirmpassword);
 		if (result.getErrors().isEmpty()) {
-			response = ResponseEntity.ok(new RegistrationResponse(jwtUtil.getToken(result.getUser().getUsername()), null));
+			LOG.info("Successfully registered user with username [{}] email [{}] password [{}] confirmpassword [{}]",
+					username, email, password, confirmpassword);
+			response = ResponseEntity
+					.ok(new RegistrationResponse(jwtUtil.getToken(result.getUser().getUsername()), null));
 		} else {
 			final Locale locale = LocaleContextHolder.getLocale();
 			final Map<String, String> convertedErrors = result.getErrors().entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey,
-							e -> e.getValue().getKey()));
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            e -> messageSource.getMessage(e.getValue().getKey(), e.getValue().getArguments(), locale)));
+			LOG.info("Failed to register user with username [{}] email [{}] password [{}] confirmpassword [{}]. Reasons:",
+					username, email, password, confirmpassword);
+			for (Map.Entry<String, String> error : convertedErrors.entrySet()) {
+				LOG.info(error.getKey() + ": " + error.getValue());
+			}
 			response = ResponseEntity.badRequest().body(new RegistrationResponse(null, convertedErrors));
 		}
 		return response;
