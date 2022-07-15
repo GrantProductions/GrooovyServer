@@ -3,10 +3,12 @@ package ca.on.grant.grooovy.response;
 public class GenericResponse {
 	private boolean success;
 	private String message;
+	Object data;
 
-	public GenericResponse(boolean success, String message) {
+	public GenericResponse(boolean success, String message, Object data) {
 		this.success = success;
 		this.message = message;
+		this.data = data;
 	}
 
 	public boolean isSuccess() {
@@ -23,5 +25,13 @@ public class GenericResponse {
 
 	public void setMessage(String message) {
 		this.message = message;
+	}
+
+	public Object getData() {
+		return data;
+	}
+
+	public void setData(Object data) {
+		this.data = data;
 	}
 }
