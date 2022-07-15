@@ -27,6 +27,21 @@ public class Review {
 	@ManyToOne
 	private User author;
 
+	Review(){
+		
+	}
+	
+
+
+	public Review(boolean isPrivate, LocalDateTime createdDateTime, int stars, String text, String url,
+			User author) {
+		this.isPrivate = isPrivate;
+		this.createdDateTime = createdDateTime;
+		this.stars = stars;
+		this.text = text;
+		this.url = url;
+		this.author = author;
+	}
 	public long getId() {
 		return id;
 	}
