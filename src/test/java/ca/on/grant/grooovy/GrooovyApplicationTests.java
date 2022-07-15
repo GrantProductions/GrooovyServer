@@ -1,10 +1,10 @@
-package ca.on.grant.recesshacks.y2022;
+package ca.on.grant.grooovy;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class RecessHacks2022ApplicationTests {
+class GrooovyApplicationTests {
 
 	@Test
 	void contextLoads() {

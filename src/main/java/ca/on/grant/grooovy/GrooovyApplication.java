@@ -1,13 +1,13 @@
-package ca.on.grant.recesshacks.y2022;
+package ca.on.grant.grooovy;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RecessHacks2022Application {
+public class GrooovyApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RecessHacks2022Application.class, args);
+		SpringApplication.run(GrooovyApplication.class, args);
 	}
 
 }
