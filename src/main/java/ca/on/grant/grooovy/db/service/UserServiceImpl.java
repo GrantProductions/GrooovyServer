@@ -25,8 +25,9 @@ public class UserServiceImpl implements UserService {
 	private final EmailValidator emailValidator = EmailValidator.getInstance();
 
 	@Override
-	public RegistrationResult registerUser(final String username, final String email, final String password,
+	public RegistrationResult registerUser(String username, final String email, final String password,
 			final String confirmpassword) {
+		username = username.trim();
 		final Map<String, MessageVO> errors = new HashMap<>();
 		if (username == null) {
 			errors.put(userConfig.getUsernameErrorAttr(), new MessageVO(ENTER_USERNAME));
