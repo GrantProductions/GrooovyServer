@@ -14,7 +14,7 @@ public class JWTConfig {
 	private final String tokenIssuer = "Grooovy";
 	private final String authorizationParameter = "Authorization";
 	private final String subjectParameter = "authorized_subject";
-	private final long expiryTimeSeconds = 60 * 15;
+	private final long expiryTimeSeconds = 60 * 1440; // 24 hours
 
 	public JWTConfig(@Value("${jwt.secret}") final String secret) {
 		this.algorithmHS = Algorithm.HMAC256(secret);
