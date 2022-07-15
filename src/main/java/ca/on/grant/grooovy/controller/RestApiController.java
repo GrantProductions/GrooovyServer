@@ -1,5 +1,7 @@
 package ca.on.grant.grooovy.controller;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -11,16 +13,22 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ca.on.grant.grooovy.db.entity.Review;
 import ca.on.grant.grooovy.db.entity.User;
 import ca.on.grant.grooovy.db.service.RegistrationResult;
+import ca.on.grant.grooovy.db.service.ReviewService;
 import ca.on.grant.grooovy.db.service.UserService;
 import ca.on.grant.grooovy.response.AuthenticationResponse;
+import ca.on.grant.grooovy.response.GenericResponse;
 import ca.on.grant.grooovy.response.RegistrationResponse;
+import ca.on.grant.grooovy.response.ReviewListResponse;
 import ca.on.grant.grooovy.util.JWTUtil;
 
 @RestController
@@ -28,6 +36,8 @@ import ca.on.grant.grooovy.util.JWTUtil;
 public class RestApiController {
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private ReviewService reviewService;
 	@Autowired
 	private MessageSource messageSource;
 	@Autowired
@@ -64,9 +74,10 @@ public class RestApiController {
 		} else {
 			final Locale locale = LocaleContextHolder.getLocale();
 			final Map<String, String> convertedErrors = result.getErrors().entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                            e -> messageSource.getMessage(e.getValue().getKey(), e.getValue().getArguments(), locale)));
-			LOG.info("Failed to register user with username [{}] email [{}] password [{}] confirmpassword [{}]. Reasons:",
+					.collect(Collectors.toMap(Map.Entry::getKey,
+							e -> messageSource.getMessage(e.getValue().getKey(), e.getValue().getArguments(), locale)));
+			LOG.info(
+					"Failed to register user with username [{}] email [{}] password [{}] confirmpassword [{}]. Reasons:",
 					username, email, password, confirmpassword);
 			for (Map.Entry<String, String> error : convertedErrors.entrySet()) {
 				LOG.info(error.getKey() + ": " + error.getValue());
@@ -75,4 +86,42 @@ public class RestApiController {
 		}
 		return response;
 	}
+
+	@GetMapping("/reviews")
+	public ResponseEntity<ReviewListResponse> getReviewList(@RequestParam("url") final String url) {
+		List<Review> reviews = reviewService.getReviewsByUrl(url);
+		final int numOfReviews = reviews.size();
+		Map<Integer, Integer> count = new HashMap<>();
+		count.put(1, 0);
+		count.put(2, 0);
+		count.put(3, 0);
+		count.put(4, 0);
+		count.put(5, 0);
+		int sum = 0;
+		for (Review r : reviews) {
+			final int stars = r.getStars();
+			count.put(stars, count.get(stars) + 1);
+			sum += stars;
+		}
+
+		final double averageRating = numOfReviews == 0 ? 0 : sum / reviews.size();
+
+		return ResponseEntity.ok(new ReviewListResponse(averageRating, numOfReviews, reviews, count.get(5),
+				count.get(4), count.get(3), count.get(2), count.get(1)));
+	}
+
+	@PostMapping("/newreview")
+	public ResponseEntity<GenericResponse> addReview(@RequestParam("url") final String url,
+			@RequestParam("stars") final String numOfStars, @RequestParam("text") final String text,
+			@RequestParam("isPrivate") final boolean isPrivate,
+			Authentication authentication) {
+		User user = (User) authentication.getPrincipal();
+		final GenericResponse response = reviewService.addReview(user, url, numOfStars, text);
+		if(response.isSuccess()) {
+			return ResponseEntity.ok(response);
+		}else {
+			return ResponseEntity.badRequest().body(response);
+		}
+	}
+
 }
