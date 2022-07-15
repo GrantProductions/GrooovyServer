@@ -1,12 +1,14 @@
 package ca.on.grant.grooovy.db.entity;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
 @Entity
@@ -26,12 +28,11 @@ public class Review {
 	private String url;
 	@ManyToOne
 	private User author;
+	@ManyToMany
+	private Set<Tag> tags;
 
-	Review(){
-		
+	public Review(){
 	}
-	
-
 
 	public Review(boolean isPrivate, LocalDateTime createdDateTime, int stars, String text, String url,
 			User author) {
@@ -96,5 +97,13 @@ public class Review {
 
 	public void setAuthor(User author) {
 		this.author = author;
+	}
+
+	public Set<Tag> getTags() {
+		return tags;
+	}
+
+	public void setTags(Set<Tag> tags) {
+		this.tags = tags;
 	}
 }
