@@ -4,8 +4,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserConfig {
-	private int minUsernameLen = 6;
-	private int maxUsernameLen = 40;
+	private int minUsernameLen = 4;
+	private int maxUsernameLen = 64;
 	private int maxEmailLen = 90;
 	private int minPasswordLen = 6;
 	private int maxPasswordLen = 40;
