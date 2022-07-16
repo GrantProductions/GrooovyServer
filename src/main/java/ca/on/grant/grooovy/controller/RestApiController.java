@@ -1,5 +1,6 @@
 package ca.on.grant.grooovy.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.on.grant.grooovy.db.entity.Review;
-import ca.on.grant.grooovy.db.entity.Tag;
 import ca.on.grant.grooovy.db.entity.User;
 import ca.on.grant.grooovy.db.service.RegistrationResult;
 import ca.on.grant.grooovy.db.service.ReviewService;
@@ -32,8 +32,8 @@ import ca.on.grant.grooovy.response.AuthenticationResponse;
 import ca.on.grant.grooovy.response.GenericResponse;
 import ca.on.grant.grooovy.response.RegistrationResponse;
 import ca.on.grant.grooovy.response.ReviewListResponse;
-import ca.on.grant.grooovy.response.TagResponse;
 import ca.on.grant.grooovy.util.JWTUtil;
+import ca.on.grant.grooovy.util.ReviewVO;
 
 @RestController
 @RequestMapping("/api")
@@ -94,8 +94,15 @@ public class RestApiController {
 	}
 
 	@GetMapping("/reviews")
-	public ResponseEntity<ReviewListResponse> getReviewList(@RequestParam("url") final String url) {
-		List<Review> reviews = reviewService.getReviewsByUrl(url);
+	public ResponseEntity<GenericResponse> getReviewList(@RequestParam("url") final String url,
+			@RequestParam(value = "sortOption", required = false) final String sortOption,
+			Authentication authentication) {
+		User user = (User) authentication.getPrincipal();
+		if(url == null || url.trim().length() == 0) {
+			return ResponseEntity.badRequest().body(new GenericResponse(false, "Could not retrieve URL", null));
+		}
+		
+		List<ReviewVO> reviews = reviewService.getReviewsByUrl(url, user, sortOption);
 		final int numOfReviews = reviews.size();
 		Map<Integer, Integer> count = new HashMap<>();
 		count.put(1, 0);
@@ -104,26 +111,26 @@ public class RestApiController {
 		count.put(4, 0);
 		count.put(5, 0);
 		int sum = 0;
-		for (Review r : reviews) {
+		for (ReviewVO r : reviews) {
 			final int stars = r.getStars();
 			count.put(stars, count.get(stars) + 1);
 			sum += stars;
 		}
 
-		final double averageRating = numOfReviews == 0 ? 0 : sum / reviews.size();
+		final double averageRating = numOfReviews == 0 ? 0 : sum / (double) numOfReviews;
 
-		return ResponseEntity.ok(new ReviewListResponse(averageRating, numOfReviews, reviews, count.get(5),
-				count.get(4), count.get(3), count.get(2), count.get(1)));
+		return ResponseEntity.ok(new GenericResponse(true, null, new ReviewListResponse(averageRating, numOfReviews, reviews, count.get(5),
+				count.get(4), count.get(3), count.get(2), count.get(1))));
 	}
 
 	@PostMapping("/reviews/new")
 	public ResponseEntity<GenericResponse> addReview(@RequestParam("url") final String url,
 			@RequestParam("stars") final String numOfStars, @RequestParam("text") final String text,
-			@RequestParam(value = "tagIDs[]", required = false) final String[] tagIDs, @RequestParam("isPrivate") final String isPrivate,
-			Authentication authentication) {
+			@RequestParam(value = "tagIDs[]", required = false) final String[] tagIDs,
+			@RequestParam("isPrivate") final String isPrivate, Authentication authentication) {
 		User user = (User) authentication.getPrincipal();
-		LOG.info("/reviews/new: url [{}] numOfStars [{}] text [{}] tagIDs [{}] isPrivate [{}]",
-				url, numOfStars, text, tagIDs != null ? Arrays.toString(tagIDs) : "none provided", isPrivate);
+		LOG.info("/reviews/new: url [{}] numOfStars [{}] text [{}] tagIDs [{}] isPrivate [{}]", url, numOfStars, text,
+				tagIDs != null ? Arrays.toString(tagIDs) : "none provided", isPrivate);
 		final GenericResponse response = reviewService.addReview(user, url, numOfStars, text, isPrivate, tagIDs);
 		if (response.isSuccess()) {
 			return ResponseEntity.ok(response);

@@ -1,9 +1,16 @@
 package ca.on.grant.grooovy.db.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+
+import javax.transaction.Transactional;
 
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +22,9 @@ import ca.on.grant.grooovy.db.entity.User;
 import ca.on.grant.grooovy.db.repository.ReviewRepository;
 import ca.on.grant.grooovy.db.repository.TagRepository;
 import ca.on.grant.grooovy.response.GenericResponse;
+import ca.on.grant.grooovy.util.ReviewVO;
+import ca.on.grant.grooovy.util.TagVO;
+import ca.on.grant.grooovy.util.UserVO;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
@@ -23,8 +33,53 @@ public class ReviewServiceImpl implements ReviewService {
 	@Autowired
 	private TagRepository tagRepository;
 
-	public List<Review> getReviewsByUrl(String url) {
-		return reviewRepository.findByUrl(url);
+	public static UserVO userToUserVO(User u) {
+		UserVO response = new UserVO(u.getId(), u.getUsername());
+		return response;
+	}
+
+	public static TagVO tagToTagVO(Tag t) {
+		TagVO response = new TagVO(t.getId(), t.getName(), t.getColor(), t.getOwner() != null);
+		return response;
+	}
+
+	@Transactional
+	public List<ReviewVO> getReviewsByUrl(String url, User user, String sortOption) {
+		List<Review> reviews;
+		if(sortOption == null) {
+			reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+		}else {
+			sortOption = sortOption.trim().toLowerCase();
+			if(sortOption.equals("recent")) {
+				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+			}else if(sortOption.equals("older")) {
+				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeAsc(url);
+			}else if(sortOption.equals("highest rating")) {
+				reviews = reviewRepository.findByUrlOrderByStarsDesc(url);
+			}else if(sortOption.equals("lowest rating")){
+				reviews = reviewRepository.findByUrlOrderByStarsAsc(url);
+			}else {
+				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+			}
+		}
+		List<ReviewVO> convertedReviews = new ArrayList<>(reviews.size());
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM d, u").withLocale(new Locale("en-US"));
+		final ZoneId zone = ZoneId.systemDefault();
+		final long userId = user.getId();
+		for (Review r : reviews) {
+			if(!r.isPrivate() || r.isPrivate() && r.getAuthor().getId() == userId) {
+				Set<TagVO> tags = new HashSet<>();
+				final LocalDateTime createdDateTime = r.getCreatedDateTime();
+				long epochTimestamp = createdDateTime.atZone(zone).toEpochSecond();
+				ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
+						formatter.format(createdDateTime), r.getStars(), r.getText(), userToUserVO(r.getAuthor()), tags);
+				for (Tag t : r.getTags()) {
+					tags.add(tagToTagVO(t));
+				}
+				convertedReviews.add(response);
+			}
+		}
+		return convertedReviews;
 	}
 
 	@Override
@@ -73,18 +128,18 @@ public class ReviewServiceImpl implements ReviewService {
 		final boolean parsedIsPrivate = Boolean.parseBoolean(isPrivate);
 		LocalDateTime now = LocalDateTime.now();
 		Set<Tag> tags = new HashSet<>();
-		
-		if(ids != null) {
+
+		if (ids != null) {
 			final long userId = user.getId();
-			for(String id : ids) {
-				if(id != null) {
+			for (String id : ids) {
+				if (id != null) {
 					final String trimmed = id.trim();
-					if(trimmed.length() > 0 && isValidLong(trimmed)) {
+					if (trimmed.length() > 0 && isValidLong(trimmed)) {
 						final long parsedId = Long.parseLong(trimmed);
 						Tag t = tagRepository.findById(parsedId);
-						if(t != null) {
+						if (t != null) {
 							final User owner = t.getOwner();
-							if(owner == null || owner != null && owner.getId() == userId) {
+							if (owner == null || owner != null && owner.getId() == userId) {
 								tags.add(t);
 							}
 						}
@@ -105,7 +160,7 @@ public class ReviewServiceImpl implements ReviewService {
 			return false;
 		}
 	}
-	
+
 	private boolean isValidNum(String num) {
 		try {
 			Integer.parseInt(num);
