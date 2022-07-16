@@ -23,27 +23,27 @@ public class ReviewServiceImpl implements ReviewService{
 	@Override
 	public GenericResponse addReview(User user, String url, String numOfStars, String text) {
 		if(numOfStars == null) {
-			return new GenericResponse(false, "Please specify a rating");
+			return new GenericResponse(false, "Please specify a rating", null);
 		}
 		numOfStars = numOfStars.trim();
 		if(numOfStars.length() == 0) {
-			return new GenericResponse(false, "Please specify a rating");
+			return new GenericResponse(false, "Please specify a rating", null);
 		}else if(!isValidNum(numOfStars)) {
-			return new GenericResponse(false, "Invalid rating");
+			return new GenericResponse(false, "Invalid rating", null);
 		}else {
 			int parsedNum = Integer.parseInt(numOfStars);
 			if(parsedNum < 1 || parsedNum > 5) {
-				return new GenericResponse(false, "Invalid rating");
+				return new GenericResponse(false, "Invalid rating", null);
 			}
 		}
 		if(url == null) {
-			return new GenericResponse(false, "Please specify a URL");
+			return new GenericResponse(false, "Please specify a URL", null);
 		}
 		url = url.trim();
 		if(url.length() == 0) {
-			return new GenericResponse(false, "Please specify a URL");
+			return new GenericResponse(false, "Please specify a URL", null);
 		}else if(!new UrlValidator().isValid(url)) {
-			return new GenericResponse(false, "Invalid URL");
+			return new GenericResponse(false, "Invalid URL", null);
 		}
 		
 		if(text == null) {
