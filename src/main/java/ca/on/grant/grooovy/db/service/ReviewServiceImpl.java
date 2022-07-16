@@ -74,7 +74,9 @@ public class ReviewServiceImpl implements ReviewService {
 				ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
 						formatter.format(createdDateTime), r.getStars(), r.getText(), userToUserVO(r.getAuthor()), tags);
 				for (Tag t : r.getTags()) {
-					tags.add(tagToTagVO(t));
+					if(t.getOwner() == null || t.getOwner().getId() == userId) {
+						tags.add(tagToTagVO(t));
+					}
 				}
 				convertedReviews.add(response);
 			}
