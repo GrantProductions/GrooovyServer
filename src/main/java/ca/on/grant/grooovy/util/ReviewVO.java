@@ -1,6 +1,5 @@
 package ca.on.grant.grooovy.util;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 public class ReviewVO {
@@ -10,10 +9,11 @@ public class ReviewVO {
 	private String formattedDateTime;
 	private int stars;
 	private String text;
+	private String url;
 	private UserVO author;
 	private Set<TagVO> tags;
 
-	public ReviewVO(long id, boolean isPrivate, long createdDateTime, String formattedDateTime, int stars, String text,
+	public ReviewVO(long id, boolean isPrivate, long createdDateTime, String formattedDateTime, int stars, String text, String url,
 			UserVO author, Set<TagVO> tags) {
 		this.id = id;
 		this.isPrivate = isPrivate;
@@ -21,6 +21,7 @@ public class ReviewVO {
 		this.formattedDateTime = formattedDateTime;
 		this.stars = stars;
 		this.text = text;
+		this.url = url;
 		this.author = author;
 		this.tags = tags;
 	}
@@ -87,5 +88,13 @@ public class ReviewVO {
 
 	public void setFormattedDateTime(String formattedDateTime) {
 		this.formattedDateTime = formattedDateTime;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

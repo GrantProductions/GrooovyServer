@@ -73,8 +73,8 @@ public class ReviewServiceImpl implements ReviewService {
 				final LocalDateTime createdDateTime = r.getCreatedDateTime();
 				long epochTimestamp = createdDateTime.atZone(zone).toEpochSecond();
 				ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
-						formatter.format(createdDateTime), r.getStars(), r.getText(), userToUserVO(r.getAuthor()),
-						tags);
+						formatter.format(createdDateTime), r.getStars(), r.getText(), r.getUrl(),
+						userToUserVO(r.getAuthor()), tags);
 				for (Tag t : r.getTags()) {
 					if (t.getOwner() == null || t.getOwner().getId() == userId) {
 						tags.add(tagToTagVO(t));
@@ -131,7 +131,8 @@ public class ReviewServiceImpl implements ReviewService {
 			final LocalDateTime createdDateTime = r.getCreatedDateTime();
 			long epochTimestamp = createdDateTime.atZone(zone).toEpochSecond();
 			ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
-					formatter.format(createdDateTime), r.getStars(), r.getText(), userToUserVO(r.getAuthor()), tags);
+					formatter.format(createdDateTime), r.getStars(), r.getText(), r.getUrl(),
+					userToUserVO(r.getAuthor()), tags);
 			boolean shouldAddReview = parsedTagFilterId == null;
 			for (Tag t : r.getTags()) {
 				final User owner = t.getOwner();
