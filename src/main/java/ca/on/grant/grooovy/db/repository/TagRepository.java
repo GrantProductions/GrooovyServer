@@ -8,4 +8,5 @@ import ca.on.grant.grooovy.db.entity.Tag;
 
 public interface TagRepository extends JpaRepository<Tag, Long>{
 	List<Tag> findAll();
+	Tag findById(long id);
 }

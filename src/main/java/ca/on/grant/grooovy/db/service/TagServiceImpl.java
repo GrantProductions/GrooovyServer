@@ -33,8 +33,9 @@ public class TagServiceImpl implements TagService {
 		for (Tag t : tags) {
 			final User owner = t.getOwner();
 			if (owner == null || owner.getId() == user.getId()) {
-				if (t.getName().contains(query)) {
-					toReturn.add(new TagResponse(t.getName(), t.getColor(), owner != null));
+				final String name = t.getName();
+				if (name.toLowerCase().contains(query.toLowerCase())) {
+					toReturn.add(new TagResponse(t.getId(), name, t.getColor(), owner != null));
 				}
 			}
 		}
@@ -80,7 +81,7 @@ public class TagServiceImpl implements TagService {
 		for (Tag t : tags) {
 			LOG.info("Tag [{}]", t.getName());
 			final User owner = t.getOwner();
-			if (t.getName().equals(name)) {
+			if (t.getName().toLowerCase().equals(name.toLowerCase())) {
 				if ((owner == null && !parsedIsPrivate)
 						|| owner != null && t.getOwner().getId() == user.getId() && parsedIsPrivate) {
 					return new GenericResponse(false, "Tag already exists", null);
