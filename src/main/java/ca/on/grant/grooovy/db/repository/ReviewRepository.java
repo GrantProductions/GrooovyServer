@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import ca.on.grant.grooovy.db.entity.Review;
+import ca.on.grant.grooovy.db.entity.User;
 
 public interface ReviewRepository extends JpaRepository<Review, Long>{
 	List<Review> findByUrl(String url);
@@ -12,4 +13,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long>{
 	List<Review> findByUrlOrderByCreatedDateTimeAsc(String url);//most old
 	List<Review> findByUrlOrderByStarsDesc(String url); //most stars
 	List<Review> findByUrlOrderByStarsAsc(String url); //least stars
+	
+	List<Review> findByAuthor(User user);
+	List<Review> findByAuthorOrderByCreatedDateTimeDesc(User user);
+	List<Review> findByAuthorOrderByCreatedDateTimeAsc(User user);
+	List<Review> findByAuthorOrderByStarsDesc(User user);
+	List<Review> findByAuthorOrderByStarsAsc(User user);
 }

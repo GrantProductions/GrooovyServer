@@ -1,5 +1,6 @@
 package ca.on.grant.grooovy.db.service;
 
+import java.security.acl.Owner;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -46,19 +47,19 @@ public class ReviewServiceImpl implements ReviewService {
 	@Transactional
 	public List<ReviewVO> getReviewsByUrl(String url, User user, String sortOption) {
 		List<Review> reviews;
-		if(sortOption == null) {
+		if (sortOption == null) {
 			reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
-		}else {
+		} else {
 			sortOption = sortOption.trim().toLowerCase();
-			if(sortOption.equals("recent")) {
+			if (sortOption.equals("recent")) {
 				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
-			}else if(sortOption.equals("older")) {
+			} else if (sortOption.equals("older")) {
 				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeAsc(url);
-			}else if(sortOption.equals("highest rating")) {
+			} else if (sortOption.equals("highest rating")) {
 				reviews = reviewRepository.findByUrlOrderByStarsDesc(url);
-			}else if(sortOption.equals("lowest rating")){
+			} else if (sortOption.equals("lowest rating")) {
 				reviews = reviewRepository.findByUrlOrderByStarsAsc(url);
-			}else {
+			} else {
 				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
 			}
 		}
@@ -67,17 +68,81 @@ public class ReviewServiceImpl implements ReviewService {
 		final ZoneId zone = ZoneId.systemDefault();
 		final long userId = user.getId();
 		for (Review r : reviews) {
-			if(!r.isPrivate() || r.isPrivate() && r.getAuthor().getId() == userId) {
+			if (!r.isPrivate() || r.isPrivate() && r.getAuthor().getId() == userId) {
 				Set<TagVO> tags = new HashSet<>();
 				final LocalDateTime createdDateTime = r.getCreatedDateTime();
 				long epochTimestamp = createdDateTime.atZone(zone).toEpochSecond();
 				ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
-						formatter.format(createdDateTime), r.getStars(), r.getText(), userToUserVO(r.getAuthor()), tags);
+						formatter.format(createdDateTime), r.getStars(), r.getText(), userToUserVO(r.getAuthor()),
+						tags);
 				for (Tag t : r.getTags()) {
-					if(t.getOwner() == null || t.getOwner().getId() == userId) {
+					if (t.getOwner() == null || t.getOwner().getId() == userId) {
 						tags.add(tagToTagVO(t));
 					}
 				}
+				convertedReviews.add(response);
+			}
+		}
+		return convertedReviews;
+	}
+
+	@Transactional
+	public List<ReviewVO> getReviewsByUser(User user, String sortOption, String tagFilterId) {
+		List<Review> reviews;
+		final long userId = user.getId();
+
+		Long parsedTagFilterId = null;
+		Tag tagFilter = null;
+		if (tagFilterId != null) {
+			tagFilterId = tagFilterId.trim();
+			if (isValidLong(tagFilterId)) {
+				parsedTagFilterId = Long.parseLong(tagFilterId);
+				tagFilter = tagRepository.findById(userId);
+				User tagOwner = tagFilter.getOwner();
+				if (tagOwner != null && tagOwner.getId() != userId) {
+					parsedTagFilterId = null;
+					tagOwner = null;
+				}
+			}
+		}
+
+		if (sortOption == null) {
+			reviews = reviewRepository.findByAuthorOrderByCreatedDateTimeDesc(user);
+		} else {
+			sortOption = sortOption.trim().toLowerCase();
+			if (sortOption.equals("recent")) {
+				reviews = reviewRepository.findByAuthorOrderByCreatedDateTimeDesc(user);
+			} else if (sortOption.equals("older")) {
+				reviews = reviewRepository.findByAuthorOrderByCreatedDateTimeAsc(user);
+			} else if (sortOption.equals("highest rating")) {
+				reviews = reviewRepository.findByAuthorOrderByStarsDesc(user);
+			} else if (sortOption.equals("lowest rating")) {
+				reviews = reviewRepository.findByAuthorOrderByStarsAsc(user);
+			} else {
+				reviews = reviewRepository.findByAuthorOrderByCreatedDateTimeDesc(user);
+			}
+		}
+		final int reviewsSize = reviews.size();
+		List<ReviewVO> convertedReviews = new ArrayList<>(reviewsSize);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM d, u").withLocale(new Locale("en-US"));
+		final ZoneId zone = ZoneId.systemDefault();
+		for (Review r : reviews) {
+			Set<TagVO> tags = new HashSet<>();
+			final LocalDateTime createdDateTime = r.getCreatedDateTime();
+			long epochTimestamp = createdDateTime.atZone(zone).toEpochSecond();
+			ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
+					formatter.format(createdDateTime), r.getStars(), r.getText(), userToUserVO(r.getAuthor()), tags);
+			boolean shouldAddReview = parsedTagFilterId == null;
+			for (Tag t : r.getTags()) {
+				final User owner = t.getOwner();
+				if (owner == null || owner.getId() == userId) {
+					tags.add(tagToTagVO(t));
+					if (parsedTagFilterId != null && t.getId() == parsedTagFilterId) {
+						shouldAddReview = true;
+					}
+				}
+			}
+			if (shouldAddReview) {
 				convertedReviews.add(response);
 			}
 		}
