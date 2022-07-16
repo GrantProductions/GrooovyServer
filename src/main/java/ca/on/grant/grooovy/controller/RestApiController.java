@@ -1,5 +1,6 @@
 package ca.on.grant.grooovy.controller;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -115,12 +116,15 @@ public class RestApiController {
 				count.get(4), count.get(3), count.get(2), count.get(1)));
 	}
 
-	@PostMapping("/newreview")
+	@PostMapping("/reviews/new")
 	public ResponseEntity<GenericResponse> addReview(@RequestParam("url") final String url,
 			@RequestParam("stars") final String numOfStars, @RequestParam("text") final String text,
-			@RequestParam("isPrivate") final boolean isPrivate, Authentication authentication) {
+			@RequestParam(value = "tagIDs[]", required = false) final String[] tagIDs, @RequestParam("isPrivate") final String isPrivate,
+			Authentication authentication) {
 		User user = (User) authentication.getPrincipal();
-		final GenericResponse response = reviewService.addReview(user, url, numOfStars, text);
+		LOG.info("/reviews/new: url [{}] numOfStars [{}] text [{}] tagIDs [{}] isPrivate [{}]",
+				url, numOfStars, text, tagIDs != null ? Arrays.toString(tagIDs) : "none provided", isPrivate);
+		final GenericResponse response = reviewService.addReview(user, url, numOfStars, text, isPrivate, tagIDs);
 		if (response.isSuccess()) {
 			return ResponseEntity.ok(response);
 		} else {

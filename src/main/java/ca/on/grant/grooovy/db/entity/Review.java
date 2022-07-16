@@ -35,13 +35,14 @@ public class Review {
 	}
 
 	public Review(boolean isPrivate, LocalDateTime createdDateTime, int stars, String text, String url,
-			User author) {
+			User author, Set<Tag> tags) {
 		this.isPrivate = isPrivate;
 		this.createdDateTime = createdDateTime;
 		this.stars = stars;
 		this.text = text;
 		this.url = url;
 		this.author = author;
+		this.tags = tags;
 	}
 	public long getId() {
 		return id;
