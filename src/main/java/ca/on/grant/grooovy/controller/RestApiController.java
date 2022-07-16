@@ -123,6 +123,22 @@ public class RestApiController {
 				count.get(4), count.get(3), count.get(2), count.get(1))));
 	}
 
+	@PostMapping("/reviews/me")
+	public ResponseEntity<GenericResponse> getUserReviews(
+			@RequestParam(value = "sortOption", required = false) final String sortOption,
+			@RequestParam(value = "tagFilter", required = false) final String tagFilterId,
+			Authentication authentication){
+		try {
+			LOG.info("/reviews/me: sortOption [{}], tagFilter [{}]", sortOption, tagFilterId);	
+			User user = (User) authentication.getPrincipal();
+			List<ReviewVO> userReviews = reviewService.getReviewsByUser(user, sortOption, tagFilterId);
+			return ResponseEntity.ok(new GenericResponse(true, null, userReviews));
+		}catch(Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().body(new GenericResponse(false, "An error occurred", null));
+		}
+	}
+	
 	@PostMapping("/reviews/new")
 	public ResponseEntity<GenericResponse> addReview(@RequestParam("url") final String url,
 			@RequestParam("stars") final String numOfStars, @RequestParam("text") final String text,
