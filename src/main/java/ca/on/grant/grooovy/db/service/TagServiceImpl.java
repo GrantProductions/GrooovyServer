@@ -62,6 +62,14 @@ public class TagServiceImpl implements TagService {
 			return new GenericResponse(false, "Please specify a color", null);
 		}
 		color = color.trim();
+		
+		if(color.length() == 0) {
+			return new GenericResponse(false, "Please specify a color", null);
+		}
+		
+		if(color.charAt(0) == '#') {
+			color = color.substring(1);
+		}
 		if (!isHexadecimal(color)) {
 			return new GenericResponse(false, "Invalid color. Only HEX is accepted", null);
 		}
@@ -71,9 +79,10 @@ public class TagServiceImpl implements TagService {
 		List<Tag> tags = tagRepository.findAll();
 		for (Tag t : tags) {
 			LOG.info("Tag [{}]", t.getName());
+			final User owner = t.getOwner();
 			if (t.getName().equals(name)) {
-				if ((t.getOwner() == null && !parsedIsPrivate)
-						|| t.getOwner().getId() == user.getId() && parsedIsPrivate) {
+				if ((owner == null && !parsedIsPrivate)
+						|| owner != null && t.getOwner().getId() == user.getId() && parsedIsPrivate) {
 					return new GenericResponse(false, "Tag already exists", null);
 				}
 			}
