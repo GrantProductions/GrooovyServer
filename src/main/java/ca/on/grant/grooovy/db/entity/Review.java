@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 @Entity
 public class Review {
@@ -30,6 +31,8 @@ public class Review {
 	private User author;
 	@ManyToMany
 	private Set<Tag> tags;
+	@OneToMany(mappedBy = "review")
+	private Set<Vote> votes;
 
 	public Review(){
 	}
@@ -106,5 +109,13 @@ public class Review {
 
 	public void setTags(Set<Tag> tags) {
 		this.tags = tags;
+	}
+
+	public Set<Vote> getVotes() {
+		return votes;
+	}
+
+	public void setVotes(Set<Vote> votes) {
+		this.votes = votes;
 	}
 }

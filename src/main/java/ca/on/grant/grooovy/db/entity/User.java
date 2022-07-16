@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
@@ -38,6 +39,8 @@ public class User implements UserDetails {
 	private List<Review> reviews = Collections.emptyList();
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<Authority> authorities = Arrays.asList(new Authority("ROLE_USER", this));
+	@OneToMany(mappedBy = "user")
+	private Set<Vote> votes;
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -110,5 +113,13 @@ public class User implements UserDetails {
 
 	public void setAuthorities(List<Authority> authorities) {
 		this.authorities = authorities;
+	}
+
+	public Set<Vote> getVotes() {
+		return votes;
+	}
+
+	public void setVotes(Set<Vote> votes) {
+		this.votes = votes;
 	}
 }
