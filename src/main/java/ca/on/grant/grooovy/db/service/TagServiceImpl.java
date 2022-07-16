@@ -14,7 +14,7 @@ import ca.on.grant.grooovy.db.entity.Tag;
 import ca.on.grant.grooovy.db.entity.User;
 import ca.on.grant.grooovy.db.repository.TagRepository;
 import ca.on.grant.grooovy.response.GenericResponse;
-import ca.on.grant.grooovy.response.TagResponse;
+import ca.on.grant.grooovy.util.TagVO;
 
 @Service
 public class TagServiceImpl implements TagService {
@@ -29,13 +29,13 @@ public class TagServiceImpl implements TagService {
 			return new GenericResponse(false, "Please specify a query", null);
 		}
 		List<Tag> tags = tagRepository.findAll();
-		List<TagResponse> toReturn = new ArrayList<>();
+		List<TagVO> toReturn = new ArrayList<>();
 		for (Tag t : tags) {
 			final User owner = t.getOwner();
 			if (owner == null || owner.getId() == user.getId()) {
 				final String name = t.getName();
 				if (name.toLowerCase().contains(query.toLowerCase())) {
-					toReturn.add(new TagResponse(t.getId(), name, t.getColor(), owner != null));
+					toReturn.add(new TagVO(t.getId(), name, t.getColor(), owner != null));
 				}
 			}
 		}
