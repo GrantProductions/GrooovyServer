@@ -1,12 +1,12 @@
-package ca.on.grant.grooovy.response;
+package ca.on.grant.grooovy.util;
 
-public class TagResponse {
+public class TagVO {
 	private long id;
 	private String name;
 	private String color;
 	private boolean isPrivate;
 
-	public TagResponse(long id, String name, String color, boolean isPrivate) {
+	public TagVO(long id, String name, String color, boolean isPrivate) {
 		this.id = id;
 		this.name = name;
 		this.color = color;

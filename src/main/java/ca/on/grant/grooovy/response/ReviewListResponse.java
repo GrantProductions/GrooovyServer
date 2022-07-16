@@ -2,20 +2,20 @@ package ca.on.grant.grooovy.response;
 
 import java.util.List;
 
-import ca.on.grant.grooovy.db.entity.Review;
+import ca.on.grant.grooovy.util.ReviewVO;
 
 public class ReviewListResponse {
 	private double averageRating;
 	private int totalReviews;
-	private List<Review> reviews;
+	private List<ReviewVO> reviews;
 	private int fives;
 	private int fours;
 	private int threes;
 	private int twos;
 	private int ones;
 
-	public ReviewListResponse(double averageRating, int totalReviews, List<Review> reviews, int fives, int fours, int threes, int twos,
-			int ones) {
+	public ReviewListResponse(double averageRating, int totalReviews, List<ReviewVO> reviews, int fives,
+			int fours, int threes, int twos, int ones) {
 		this.averageRating = averageRating;
 		this.totalReviews = totalReviews;
 		this.reviews = reviews;
@@ -34,11 +34,19 @@ public class ReviewListResponse {
 		this.averageRating = averageRating;
 	}
 
-	public List<Review> getReviews() {
+	public int getTotalReviews() {
+		return totalReviews;
+	}
+
+	public void setTotalReviews(int totalReviews) {
+		this.totalReviews = totalReviews;
+	}
+
+	public List<ReviewVO> getReviews() {
 		return reviews;
 	}
 
-	public void setReviews(List<Review> reviews) {
+	public void setReviews(List<ReviewVO> reviews) {
 		this.reviews = reviews;
 	}
 
@@ -82,11 +90,4 @@ public class ReviewListResponse {
 		this.ones = ones;
 	}
 
-	public int getTotalReviews() {
-		return totalReviews;
-	}
-
-	public void setTotalReviews(int totalReviews) {
-		this.totalReviews = totalReviews;
-	}
 }
