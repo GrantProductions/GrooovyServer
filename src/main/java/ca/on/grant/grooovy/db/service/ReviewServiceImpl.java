@@ -1,9 +1,7 @@
 package ca.on.grant.grooovy.db.service;
 
-import java.security.acl.Owner;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,9 +12,12 @@ import java.util.Set;
 import javax.transaction.Transactional;
 
 import org.apache.commons.validator.routines.UrlValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ca.on.grant.grooovy.controller.RestApiController;
 import ca.on.grant.grooovy.db.entity.Review;
 import ca.on.grant.grooovy.db.entity.Tag;
 import ca.on.grant.grooovy.db.entity.User;
@@ -29,6 +30,8 @@ import ca.on.grant.grooovy.util.UserVO;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
+	private static final Logger LOG = LoggerFactory.getLogger(ReviewServiceImpl.class);
+	
 	@Autowired
 	private ReviewRepository reviewRepository;
 	@Autowired
@@ -45,22 +48,54 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	@Transactional
-	public List<ReviewVO> getReviewsByUrl(String url, User user, String sortOption) {
+	public List<ReviewVO> getReviewsByUrl(String url, User user, String sortOption, String startsWith) {
 		List<Review> reviews;
+		boolean parsedStartsWith = false;
+		if (startsWith != null) {
+			startsWith = startsWith.trim();
+			if (isBoolean(startsWith)) {
+				parsedStartsWith = Boolean.parseBoolean(startsWith);
+			}
+		}
+		LOG.info("parsedStartsWith [{}]", parsedStartsWith);
 		if (sortOption == null) {
-			reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+			if(parsedStartsWith) {
+				reviews = reviewRepository.findByUrlStartsWithOrderByCreatedDateTimeDesc(url);
+			}else {
+				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+			}
 		} else {
 			sortOption = sortOption.trim().toLowerCase();
 			if (sortOption.equals("recent")) {
-				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+				if (parsedStartsWith) {
+					reviews = reviewRepository.findByUrlStartsWithOrderByCreatedDateTimeDesc(url);
+				} else {
+					reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+				}
 			} else if (sortOption.equals("older")) {
-				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeAsc(url);
+				if (parsedStartsWith) {
+					reviews = reviewRepository.findByUrlStartsWithOrderByCreatedDateTimeAsc(url);
+				} else {
+					reviews = reviewRepository.findByUrlOrderByCreatedDateTimeAsc(url);
+				}
 			} else if (sortOption.equals("highest rating")) {
-				reviews = reviewRepository.findByUrlOrderByStarsDesc(url);
+				if (parsedStartsWith) {
+					reviews = reviewRepository.findByUrlStartsWithOrderByStarsDesc(url);
+				} else {
+					reviews = reviewRepository.findByUrlOrderByStarsDesc(url);
+				}
 			} else if (sortOption.equals("lowest rating")) {
-				reviews = reviewRepository.findByUrlOrderByStarsAsc(url);
+				if (parsedStartsWith) {
+					reviews = reviewRepository.findByUrlStartsWithOrderByStarsAsc(url);
+				} else {
+					reviews = reviewRepository.findByUrlOrderByStarsAsc(url);
+				}
 			} else {
-				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+				if (parsedStartsWith) {
+					reviews = reviewRepository.findByUrlStartsWithOrderByCreatedDateTimeDesc(url);
+				} else {
+					reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
+				}
 			}
 		}
 		List<ReviewVO> convertedReviews = new ArrayList<>(reviews.size());

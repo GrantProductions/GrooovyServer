@@ -14,6 +14,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long>{
 	List<Review> findByUrlOrderByStarsDesc(String url); //most stars
 	List<Review> findByUrlOrderByStarsAsc(String url); //least stars
 	
+	List<Review> findByUrlStartsWithOrderByCreatedDateTimeDesc(String url);//most recent
+	List<Review> findByUrlStartsWithOrderByCreatedDateTimeAsc(String url);//most old
+	List<Review> findByUrlStartsWithOrderByStarsDesc(String url); //most stars
+	List<Review> findByUrlStartsWithOrderByStarsAsc(String url); //least stars
+	
 	List<Review> findByAuthor(User user);
 	List<Review> findByAuthorOrderByCreatedDateTimeDesc(User user);
 	List<Review> findByAuthorOrderByCreatedDateTimeAsc(User user);

@@ -96,13 +96,15 @@ public class RestApiController {
 	@GetMapping("/reviews")
 	public ResponseEntity<GenericResponse> getReviewList(@RequestParam("url") final String url,
 			@RequestParam(value = "sortOption", required = false) final String sortOption,
+			@RequestParam(value = "startsWith", required = false) final String startsWith,
 			Authentication authentication) {
+		LOG.info("/reviews: url [{}] sortOptions [{}] startsWith [{}]", url, sortOption, startsWith);
 		User user = (User) authentication.getPrincipal();
 		if(url == null || url.trim().length() == 0) {
 			return ResponseEntity.badRequest().body(new GenericResponse(false, "Could not retrieve URL", null));
 		}
 		
-		List<ReviewVO> reviews = reviewService.getReviewsByUrl(url, user, sortOption);
+		List<ReviewVO> reviews = reviewService.getReviewsByUrl(url, user, sortOption, startsWith);
 		final int numOfReviews = reviews.size();
 		Map<Integer, Integer> count = new HashMap<>();
 		count.put(1, 0);
@@ -122,7 +124,7 @@ public class RestApiController {
 		return ResponseEntity.ok(new GenericResponse(true, null, new ReviewListResponse(averageRating, numOfReviews, reviews, count.get(5),
 				count.get(4), count.get(3), count.get(2), count.get(1))));
 	}
-
+	
 	@PostMapping("/reviews/me")
 	public ResponseEntity<GenericResponse> getUserReviews(
 			@RequestParam(value = "sortOption", required = false) final String sortOption,
