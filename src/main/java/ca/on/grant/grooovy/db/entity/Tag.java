@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Tag {
@@ -20,7 +21,16 @@ public class Tag {
 	private String name;
 	@ManyToMany
 	private Set<Review> reviews;
+	@ManyToOne
+	private User owner;
 
+	public Tag() {}
+	public Tag(String color, String name, User owner) {
+		this.color = color;
+		this.name = name;
+		this.owner = owner;
+	}
+	
 	public long getId() {
 		return id;
 	}
@@ -51,5 +61,13 @@ public class Tag {
 
 	public void setReviews(Set<Review> reviews) {
 		this.reviews = reviews;
+	}
+
+	public User getOwner() {
+		return owner;
+	}
+
+	public void setOwner(User owner) {
+		this.owner = owner;
 	}
 }
