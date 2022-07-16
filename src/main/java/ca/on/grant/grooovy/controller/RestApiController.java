@@ -21,14 +21,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.on.grant.grooovy.db.entity.Review;
+import ca.on.grant.grooovy.db.entity.Tag;
 import ca.on.grant.grooovy.db.entity.User;
 import ca.on.grant.grooovy.db.service.RegistrationResult;
 import ca.on.grant.grooovy.db.service.ReviewService;
+import ca.on.grant.grooovy.db.service.TagService;
 import ca.on.grant.grooovy.db.service.UserService;
 import ca.on.grant.grooovy.response.AuthenticationResponse;
 import ca.on.grant.grooovy.response.GenericResponse;
 import ca.on.grant.grooovy.response.RegistrationResponse;
 import ca.on.grant.grooovy.response.ReviewListResponse;
+import ca.on.grant.grooovy.response.TagResponse;
 import ca.on.grant.grooovy.util.JWTUtil;
 
 @RestController
@@ -40,6 +43,8 @@ public class RestApiController {
 	private ReviewService reviewService;
 	@Autowired
 	private MessageSource messageSource;
+	@Autowired
+	private TagService tagService;
 	@Autowired
 	private JWTUtil jwtUtil;
 	private static final Logger LOG = LoggerFactory.getLogger(RestApiController.class);
@@ -113,15 +118,38 @@ public class RestApiController {
 	@PostMapping("/newreview")
 	public ResponseEntity<GenericResponse> addReview(@RequestParam("url") final String url,
 			@RequestParam("stars") final String numOfStars, @RequestParam("text") final String text,
-			@RequestParam("isPrivate") final boolean isPrivate,
-			Authentication authentication) {
+			@RequestParam("isPrivate") final boolean isPrivate, Authentication authentication) {
 		User user = (User) authentication.getPrincipal();
 		final GenericResponse response = reviewService.addReview(user, url, numOfStars, text);
-		if(response.isSuccess()) {
+		if (response.isSuccess()) {
 			return ResponseEntity.ok(response);
-		}else {
+		} else {
 			return ResponseEntity.badRequest().body(response);
 		}
 	}
 
+	@GetMapping("/gettags")
+	public ResponseEntity<GenericResponse> getTags(@RequestParam("query") final String query,
+			Authentication authentication) {
+		User user = (User) authentication.getPrincipal();
+		if (query == null || query.trim().length() == 0) {
+			return ResponseEntity.badRequest().body(new GenericResponse(false, "Please specify a query", null));
+		}
+		GenericResponse result = tagService.getTags(user, query);
+		return ResponseEntity.ok(result);
+	}
+
+	@PostMapping("/newtag")
+	public ResponseEntity<GenericResponse> createTag(@RequestParam(value = "name", required = false) final String name,
+			@RequestParam(value = "color", required = false) final String color,
+			@RequestParam(value = "isPrivate", required = false) final String isPrivate,
+			Authentication authentication) {
+		User user = (User) authentication.getPrincipal();
+		GenericResponse result = tagService.createTag(name, color, isPrivate, user);
+		if (result.isSuccess()) {
+			return ResponseEntity.ok(result);
+		} else {
+			return ResponseEntity.badRequest().body(result);
+		}
+	}
 }
