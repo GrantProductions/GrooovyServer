@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ca.on.grant.grooovy.controller.RestApiController;
+import ca.on.grant.grooovy.controller.RestApiControllerV1;
 import ca.on.grant.grooovy.db.entity.Review;
 import ca.on.grant.grooovy.db.entity.Tag;
 import ca.on.grant.grooovy.db.entity.User;

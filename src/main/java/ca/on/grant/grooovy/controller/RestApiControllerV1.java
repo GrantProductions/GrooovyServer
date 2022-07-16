@@ -36,8 +36,8 @@ import ca.on.grant.grooovy.util.JWTUtil;
 import ca.on.grant.grooovy.util.ReviewVO;
 
 @RestController
-@RequestMapping("/api")
-public class RestApiController {
+@RequestMapping("/api/v1")
+public class RestApiControllerV1 {
 	@Autowired
 	private UserService userService;
 	@Autowired
@@ -48,7 +48,7 @@ public class RestApiController {
 	private TagService tagService;
 	@Autowired
 	private JWTUtil jwtUtil;
-	private static final Logger LOG = LoggerFactory.getLogger(RestApiController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RestApiControllerV1.class);
 
 	@PostMapping("/authenticate")
 	public ResponseEntity<AuthenticationResponse> authenticate(@RequestParam("username") final String username,
