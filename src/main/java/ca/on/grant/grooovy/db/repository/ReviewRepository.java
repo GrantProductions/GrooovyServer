@@ -8,6 +8,8 @@ import ca.on.grant.grooovy.db.entity.Review;
 import ca.on.grant.grooovy.db.entity.User;
 
 public interface ReviewRepository extends JpaRepository<Review, Long>{
+	Review findById(long id);
+	
 	List<Review> findByUrl(String url);
 	List<Review> findByUrlOrderByCreatedDateTimeDesc(String url);//most recent
 	List<Review> findByUrlOrderByCreatedDateTimeAsc(String url);//most old

@@ -157,6 +157,19 @@ public class RestApiControllerV1 {
 		}
 	}
 
+	@PostMapping("/reviews/vote")
+	public ResponseEntity<GenericResponse> voteReview(@RequestParam("postId") final String postId,
+			@RequestParam("action") final String action, Authentication authentication){
+		User user = (User) authentication.getPrincipal();
+		final GenericResponse response = reviewService.voteReview(postId, action, user);
+		if(response.isSuccess()) {
+			return ResponseEntity.ok(response);
+		}else {
+			return ResponseEntity.badRequest().body(response);
+		}
+	}
+	
+	
 	@GetMapping("/gettags")
 	public ResponseEntity<GenericResponse> getTags(@RequestParam("query") final String query,
 			Authentication authentication) {

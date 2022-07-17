@@ -17,12 +17,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ca.on.grant.grooovy.controller.RestApiControllerV1;
 import ca.on.grant.grooovy.db.entity.Review;
 import ca.on.grant.grooovy.db.entity.Tag;
 import ca.on.grant.grooovy.db.entity.User;
+import ca.on.grant.grooovy.db.entity.Vote;
+import ca.on.grant.grooovy.db.entity.Vote.Type;
 import ca.on.grant.grooovy.db.repository.ReviewRepository;
 import ca.on.grant.grooovy.db.repository.TagRepository;
+import ca.on.grant.grooovy.db.repository.VoteRepository;
 import ca.on.grant.grooovy.response.GenericResponse;
 import ca.on.grant.grooovy.util.ReviewVO;
 import ca.on.grant.grooovy.util.TagVO;
@@ -31,11 +33,13 @@ import ca.on.grant.grooovy.util.UserVO;
 @Service
 public class ReviewServiceImpl implements ReviewService {
 	private static final Logger LOG = LoggerFactory.getLogger(ReviewServiceImpl.class);
-	
+
 	@Autowired
 	private ReviewRepository reviewRepository;
 	@Autowired
 	private TagRepository tagRepository;
+	@Autowired
+	private VoteRepository voteRepository;
 
 	public static UserVO userToUserVO(User u) {
 		UserVO response = new UserVO(u.getId(), u.getUsername());
@@ -59,9 +63,9 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 		LOG.info("parsedStartsWith [{}]", parsedStartsWith);
 		if (sortOption == null) {
-			if(parsedStartsWith) {
+			if (parsedStartsWith) {
 				reviews = reviewRepository.findByUrlStartsWithOrderByCreatedDateTimeDesc(url);
-			}else {
+			} else {
 				reviews = reviewRepository.findByUrlOrderByCreatedDateTimeDesc(url);
 			}
 		} else {
@@ -107,9 +111,26 @@ public class ReviewServiceImpl implements ReviewService {
 				Set<TagVO> tags = new HashSet<>();
 				final LocalDateTime createdDateTime = r.getCreatedDateTime();
 				long epochTimestamp = createdDateTime.atZone(zone).toEpochSecond();
+
+				final Set<Vote> votes = r.getVotes();
+				Type userChoice = null;
+				long totalScore = 0;
+				for (Vote vote : votes) {
+					if(vote.getDeletedDateTime() == null) {
+						final Type voteType = vote.getType();
+						if (vote.getUser().getId() == userId) {
+							userChoice = voteType;
+						}
+						if (voteType.equals(Type.UP)) {
+							totalScore++;
+						} else {
+							totalScore--;
+						}
+					}
+				}
 				ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
 						formatter.format(createdDateTime), r.getStars(), r.getText(), r.getUrl(),
-						userToUserVO(r.getAuthor()), tags);
+						userToUserVO(r.getAuthor()), tags, totalScore, userChoice);
 				for (Tag t : r.getTags()) {
 					if (t.getOwner() == null || t.getOwner().getId() == userId) {
 						tags.add(tagToTagVO(t));
@@ -165,9 +186,26 @@ public class ReviewServiceImpl implements ReviewService {
 			Set<TagVO> tags = new HashSet<>();
 			final LocalDateTime createdDateTime = r.getCreatedDateTime();
 			long epochTimestamp = createdDateTime.atZone(zone).toEpochSecond();
+
+			final Set<Vote> votes = r.getVotes();
+			Type userChoice = null;
+			long totalScore = 0;
+			for (Vote vote : votes) {
+				if(vote.getDeletedDateTime() == null) {
+					final Type voteType = vote.getType();
+					if (vote.getUser().getId() == userId) {
+						userChoice = voteType;
+					}
+					if (voteType.equals(Type.UP)) {
+						totalScore++;
+					} else {
+						totalScore--;
+					}
+				}
+			}
 			ReviewVO response = new ReviewVO(r.getId(), r.isPrivate(), epochTimestamp,
 					formatter.format(createdDateTime), r.getStars(), r.getText(), r.getUrl(),
-					userToUserVO(r.getAuthor()), tags);
+					userToUserVO(r.getAuthor()), tags, totalScore, userChoice);
 			boolean shouldAddReview = parsedTagFilterId == null;
 			for (Tag t : r.getTags()) {
 				final User owner = t.getOwner();
@@ -253,6 +291,75 @@ public class ReviewServiceImpl implements ReviewService {
 		Review newReview = new Review(parsedIsPrivate, now, parsedNumOfStars, text, url, user, tags);
 		reviewRepository.save(newReview);
 		return new GenericResponse(true, null, null);
+	}
+
+	@Transactional
+	public GenericResponse voteReview(String postId, String action, User user) {
+		if (postId == null) {
+			return new GenericResponse(false, "Please specify a post id", null);
+		}
+		postId = postId.trim();
+
+		if (postId.length() == 0) {
+			return new GenericResponse(false, "Please specify a post id", null);
+		}
+
+		if (action == null) {
+			return new GenericResponse(false, "Please specify an action", null);
+		}
+		action = action.trim().toUpperCase();
+		final Type parsedAction;
+
+		if (action.length() == 0) {
+			return new GenericResponse(false, "Please specify an action", null);
+		} else {
+			if (action.equals("UP")) {
+				parsedAction = Vote.Type.UP;
+			} else if (action.equals("DOWN")) {
+				parsedAction = Vote.Type.DOWN;
+			} else {
+				return new GenericResponse(false, "Invalid action", null);
+			}
+		}
+
+		Long parsedPostId;
+
+		if (!isValidLong(postId)) {
+			return new GenericResponse(false, "Please specify a post id", null);
+		}
+		parsedPostId = Long.parseLong(postId);
+		Review review = reviewRepository.findById((long) parsedPostId);
+
+		final long userId = user.getId();
+		LocalDateTime now = LocalDateTime.now();
+		Type oldVoteType = null;
+		if (review != null) {
+			boolean userHasVoted = false;
+			Set<Vote> votes = review.getVotes();
+			for (Vote v : votes) {
+				if (v.getUser().getId() == userId) {
+					if (v.getDeletedDateTime() == null) {
+						v.setDeletedDateTime(now);
+						userHasVoted = true;
+						oldVoteType = v.getType();
+						break;
+					}
+				}
+			}
+
+			if (!userHasVoted) {
+				Vote newVote = new Vote(parsedPostId, parsedAction, user, review, now, null);
+				voteRepository.save(newVote);
+			}else {
+				if(oldVoteType != parsedAction) {
+					Vote newVote = new Vote(parsedPostId, parsedAction, user, review, now, null);
+					voteRepository.save(newVote);
+				}
+			}
+			return new GenericResponse(true, null, null);
+		} else {
+			return new GenericResponse(false, "No review with id found", null);
+		}
 	}
 
 	private boolean isValidLong(String num) {

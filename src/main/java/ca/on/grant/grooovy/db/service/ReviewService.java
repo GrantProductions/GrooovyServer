@@ -10,4 +10,5 @@ public interface ReviewService {
 	List<ReviewVO> getReviewsByUrl(String url, User user, String sortOption, String startsWith);
 	List<ReviewVO> getReviewsByUser(User user, String sortOption, String tagFilterId);
 	GenericResponse addReview(User user, String url, String numOfStars, String text, String isPrivate, String[] ids);
+	GenericResponse voteReview(String postId, String action, User user);
 }

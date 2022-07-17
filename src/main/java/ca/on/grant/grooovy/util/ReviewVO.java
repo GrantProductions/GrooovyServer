@@ -2,6 +2,8 @@ package ca.on.grant.grooovy.util;
 
 import java.util.Set;
 
+import ca.on.grant.grooovy.db.entity.Vote.Type;
+
 public class ReviewVO {
 	private long id;
 	private boolean isPrivate;
@@ -11,10 +13,12 @@ public class ReviewVO {
 	private String text;
 	private String url;
 	private UserVO author;
+	private long score;
+	private Type userVote;
 	private Set<TagVO> tags;
 
-	public ReviewVO(long id, boolean isPrivate, long createdDateTime, String formattedDateTime, int stars, String text, String url,
-			UserVO author, Set<TagVO> tags) {
+	public ReviewVO(long id, boolean isPrivate, long createdDateTime, String formattedDateTime, int stars, String text,
+			String url, UserVO author, Set<TagVO> tags, long score, Type userVote) {
 		this.id = id;
 		this.isPrivate = isPrivate;
 		this.createdDateTime = createdDateTime;
@@ -23,6 +27,8 @@ public class ReviewVO {
 		this.text = text;
 		this.url = url;
 		this.author = author;
+		this.score = score;
+		this.userVote = userVote;
 		this.tags = tags;
 	}
 
@@ -96,5 +102,21 @@ public class ReviewVO {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public long getScore() {
+		return score;
+	}
+
+	public void setScore(long score) {
+		this.score = score;
+	}
+
+	public Type getUserVote() {
+		return userVote;
+	}
+
+	public void setUserVote(Type userVote) {
+		this.userVote = userVote;
 	}
 }
